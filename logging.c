@@ -119,13 +119,22 @@ static UARTDRV_HandleData_t handle;
 DEFINE_BUF_QUEUE(3,rxBufferQueue);
 DEFINE_BUF_QUEUE(3,txBufferQueue);
 
-#define BSP_USART1_CTS_PIN                            (10U)
-#define BSP_USART1_CTS_PORT                           (gpioPortC)
-#define BSP_USART1_CTS_LOC                            (11U)
+#define CTS_PIN                            (10U)
+#define CTS_PORT                           (gpioPortC)
+#define CTS_LOC                            (11U)
 
-#define BSP_USART1_RTS_PIN                            (11U)
-#define BSP_USART1_RTS_PORT                           (gpioPortC)
-#define BSP_USART1_RTS_LOC                            (11U)
+#define RTS_PIN                            (11U)
+#define RTS_PORT                           (gpioPortC)
+#define RTS_LOC                            (11U)
+
+#define RX_PIN                          (12U)
+#define RX_PORT                         (gpioPortD)
+#define RX_LOC                          (19U)
+
+#define TX_PIN                          (11U)
+#define TX_PORT                         (gpioPortD)
+#define TX_LOC                          (19U)
+
 
 static uint8 rx_buffer[256];
 volatile static uint8 rx_head = 0, rx_tail = 0;
@@ -165,20 +174,20 @@ void init_logging(void) {
 	init.oversampling = usartOVS16;
 	init.parity = usartNoParity;
 	init.port = USART1;
-	init.portLocationCts = BSP_USART1_CTS_LOC;
-	init.portLocationRts = BSP_USART1_RTS_LOC;
-	init.portLocationRx = PORTIO_USART1_RX_LOC;
-	init.portLocationTx = PORTIO_USART1_TX_LOC;
-	init.ctsPin = BSP_USART1_CTS_PIN;
-	init.ctsPort = BSP_USART1_CTS_PORT;
-	init.rtsPin = BSP_USART1_RTS_PIN;
-	init.rtsPort = BSP_USART1_RTS_PORT;
+	init.portLocationCts = CTS_LOC;
+	init.portLocationRts = RTS_LOC;
+	init.portLocationRx = RX_LOC;
+	init.portLocationTx = TX_LOC;
+	init.ctsPin = CTS_PIN;
+	init.ctsPort = CTS_PORT;
+	init.rtsPin = RTS_PIN;
+	init.rtsPort = RTS_PORT;
 	init.stopBits = usartStopbits1;
 	init.rxQueue = (UARTDRV_Buffer_FifoQueue_t *) &rxBufferQueue;
 	init.txQueue = (UARTDRV_Buffer_FifoQueue_t *) &txBufferQueue;
-	GPIO_PinModeSet(PORTIO_USART1_TX_PORT,PORTIO_USART1_TX_PIN,gpioModePushPull,1);
-	GPIO_PinModeSet(PORTIO_USART1_RX_PORT,PORTIO_USART1_RX_PIN,gpioModeInputPull,1);
-	USART1->ROUTELOC0 = (PORTIO_USART1_TX_LOC << 8) | PORTIO_USART1_RX_LOC;
+	GPIO_PinModeSet(TX_PORT,TX_PIN,gpioModePushPull,1);
+	GPIO_PinModeSet(RX_PORT,RX_PIN,gpioModeInputPull,1);
+	USART1->ROUTELOC0 = (TX_LOC << 8) | RX_LOC;
 	USART1->ROUTEPEN = 3;
 	UARTDRV_Init(&handle,&init);
 	uart_active = 0;
