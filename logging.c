@@ -29,7 +29,7 @@ int flag = 0;
 	DATA.size = SIZE; \
 	DATA.nmemb = NMEMB; \
 	DATA.ptr = (uint32_t)PTR; \
-	/* DATA.timestamp = timestamp();*/ \
+	DATA.timestamp = timestamp(); \
 	head++; \
 	head &= (N_CALL_DATA-1); \
 	push_count++; \
