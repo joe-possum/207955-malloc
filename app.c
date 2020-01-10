@@ -130,6 +130,7 @@ printf("connected\n");
 /* Initialize stack */
   gecko_init(pconfig);
 
+  log_event(0xff,__LINE__);
   while (1) {
     /* Event pointer for handling events */
     struct gecko_cmd_packet* evt;
@@ -177,7 +178,7 @@ printf("connected\n");
     	  gecko_cmd_system_get_bt_address();
     	  printf("wwr: %04x\n",gattdb_wwr);
     	printf("%d calls so far\n",log_fill());
-	gecko_cmd_hardware_set_soft_timer(2<<15,0,0);
+	//gecko_cmd_hardware_set_soft_timer(2<<15,0,0);
 	scanning = 1;
         break;
 
