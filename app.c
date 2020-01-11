@@ -26,6 +26,7 @@
 #include "uartdrv.h"
 #include "app.h"
 #include "dump.h"
+#include "bg_version.h"
 
 #include "logging.h"
 #include "systick.h"
@@ -127,6 +128,7 @@ while(GPIO_PinInGet(BSP_BUTTON0_PORT,BSP_BUTTON0_PIN));
 #endif
 printf("connected\n");
 
+	log_event_id(0xfe,__LINE__,BG_VERSION_MAJOR << 24 | BG_VERSION_MINOR << 16 | BG_VERSION_PATCH << 8);
 /* Initialize stack */
   gecko_init(pconfig);
 
