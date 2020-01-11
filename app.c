@@ -179,9 +179,11 @@ printf("connected\n");
     	  memset(packets,0,sizeof(packets));
     	  gecko_cmd_system_get_bt_address();
     	  printf("wwr: %04x\n",gattdb_wwr);
-    	printf("%d calls so far\n",log_fill());
-	//gecko_cmd_hardware_set_soft_timer(2<<15,0,0);
-	scanning = 1;
+    	  printf("%d calls so far\n",log_fill());
+    	  //gecko_cmd_hardware_set_soft_timer(2<<15,0,0);
+    	  //scanning = 1;
+          gecko_cmd_le_gap_set_advertise_timing(0, 160, 160, 0, 0);
+    	  gecko_cmd_le_gap_start_advertising(0, le_gap_general_discoverable, le_gap_connectable_scannable);
         break;
 
     case gecko_evt_hardware_soft_timer_id: /***************************************************************** hardware_soft_timer **/
