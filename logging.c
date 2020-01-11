@@ -17,6 +17,7 @@ uint16 headu[500], tailu[500], next_tailu[500];
 #define DATA call_data[head]
 int flag = 0;
 #define A register uint32_t lr; __asm volatile ("MOV %0, LR\n" : "=r" (lr) )
+#define B register uint32_t sp; __asm volatile ("MOV %0, SP\n" : "=r" (sp) )
 #define COMMON(LR,NAME,SIZE,NMEMB,PTR) do { \
 	if(overrun) break; \
 	if(full) { \
@@ -40,11 +41,12 @@ int flag = 0;
 	void *__real ## P ## malloc(size_t); \
 	void *__wrap ## P ## malloc(size_t size) { \
 		A; \
+		B; \
 		flag++; \
 		void *rc = __real ## P ## malloc(size); \
 		flag--; \
 		if(flag) return rc; \
-		COMMON(lr,N,size,0,rc); \
+		COMMON(lr,N,size,((int32_t*)sp)[11],rc); \
 		return rc; \
 	}
 #define C(P,N) \
