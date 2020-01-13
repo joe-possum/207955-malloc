@@ -112,9 +112,9 @@ void log_event(uint8 event, uint32 line) {
 	COMMON(lr,event,line,push_count,pop_count);
 }
 
-void log_event_id(uint8 event, uint32 line, uint32 id) {
+void log_event_id(uint8 event, uint32 line, uint32 id, uint32 eptr) {
 	A;
-	COMMON(lr,event,line,push_count,id);
+	COMMON(lr,event,eptr,push_count,id);
 }
 
 static UARTDRV_HandleData_t handle;

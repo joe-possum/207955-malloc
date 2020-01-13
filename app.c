@@ -138,7 +138,7 @@ while(GPIO_PinInGet(BSP_BUTTON0_PORT,BSP_BUTTON0_PIN));
 #endif
 printf("connected\n");
 
-	log_event_id(0xfe,__LINE__,BG_VERSION_MAJOR << 24 | BG_VERSION_MINOR << 16 | BG_VERSION_PATCH << 8);
+	log_event_id(0xfe,__LINE__,BG_VERSION_MAJOR << 24 | BG_VERSION_MINOR << 16 | BG_VERSION_PATCH << 8,0);
 	SYNC(1);
 /* Initialize stack */
   gecko_init(pconfig);
@@ -168,7 +168,7 @@ printf("connected\n");
     SYNC(0);
     evt = gecko_wait_event();
     SYNC(1);
-    log_event_id(0x40,__LINE__,BGLIB_MSG_ID(evt->header));
+    log_event_id(0x40,__LINE__,BGLIB_MSG_ID(evt->header),(uint32)evt);
 #ifdef DUMP
     switch(BGLIB_MSG_ID(evt->header)) {
     //case gecko_evt_hardware_soft_timer_id:
@@ -241,6 +241,10 @@ printf("connected\n");
     	case 5:
     		gecko_cmd_sm_configure(3,sm_io_capability_displayonly);
     		scanning = 1;
+    	case 6:
+    	    log_event(0xf4,__LINE__);
+    	    show_stats();
+    	    break;
     	}
       break;
 #undef ED
@@ -265,12 +269,8 @@ printf("connected\n");
         break;
 
       case gecko_evt_le_connection_closed_id:
-    	    log_event(0x30,__LINE__);
-    	    SYNC(0);
-    	    evt = gecko_peek_event();
-    	    SYNC(1);
-    	    log_event(0xf4,__LINE__);
-    	    show_stats();
+    	  gecko_cmd_hardware_set_soft_timer(1<<13,0,1);
+    	  scanning = 6;
         break;
 
       /* Add additional event handlers as your application requires */
