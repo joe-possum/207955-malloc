@@ -1,4 +1,5 @@
 #include "systick.h"
+void logging_process(void);
 
 volatile uint32_t systicks;
 volatile uint32_t systick_latency;
@@ -13,4 +14,5 @@ void SysTick_Handler (void) {
   systick_latency = SysTick->VAL;
   (void)SysTick->CTRL;
   systicks++;
+  logging_process();
 }

@@ -35,7 +35,7 @@ int flag = 0;
 	head &= (N_CALL_DATA-1); \
 	push_count++; \
 	if (head == tail) full = 1; \
-	if(!uart_active && (((N_CALL_DATA + head - tail) & (N_CALL_DATA-1)) > 10)) gecko_external_signal(1); \
+	/*if(!uart_active && (((N_CALL_DATA + head - tail) & (N_CALL_DATA-1)) > 10)) gecko_external_signal(1);*/ \
 	} while(0)
 #define M(P,N) \
 	void *__real ## P ## malloc(size_t); \

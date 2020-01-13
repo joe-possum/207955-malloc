@@ -25,7 +25,7 @@
 #include "gatt_db.h"
 #include "uartdrv.h"
 #include "app.h"
-#include "dump.h"
+//#include "dump.h"
 #include "bg_version.h"
 
 #include "logging.h"
@@ -144,6 +144,12 @@ printf("connected\n");
   gecko_init(pconfig);
 
   log_event(0xff,__LINE__);
+
+	uint32 current = SysTick->VAL;
+	uint32 target = (current - 5*38400) & 0xffffff;
+	if(target > current) while(SysTick->VAL < current);
+	while(SysTick->VAL > target);
+
   while (1) {
     /* Event pointer for handling events */
     struct gecko_cmd_packet* evt;
@@ -179,8 +185,8 @@ printf("connected\n");
 	//printf("...done\n");
 	//printf("%d events in queue\n",log_fill());
 
-	uint32 current = SysTick->VAL;
-	uint32 target = (current - 1*38400) & 0xffffff;
+	current = SysTick->VAL;
+	target = (current - 1*38400) & 0xffffff;
 
 	/* Handle events */
     switch (BGLIB_MSG_ID(evt->header)) {
