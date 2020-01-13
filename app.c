@@ -25,7 +25,7 @@
 #include "gatt_db.h"
 #include "uartdrv.h"
 #include "app.h"
-//#include "dump.h"
+#include "dump.h"
 #include "bg_version.h"
 
 #include "logging.h"
