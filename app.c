@@ -265,7 +265,12 @@ printf("connected\n");
         break;
 
       case gecko_evt_le_connection_closed_id:
-    	  show_stats();
+    	    log_event(0x30,__LINE__);
+    	    SYNC(0);
+    	    evt = gecko_peek_event();
+    	    SYNC(1);
+    	    log_event(0xf4,__LINE__);
+    	    show_stats();
         break;
 
       /* Add additional event handlers as your application requires */
