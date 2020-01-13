@@ -25,11 +25,13 @@
 #include "gatt_db.h"
 #include "uartdrv.h"
 #include "app.h"
-#include "dump.h"
+//#include "dump.h"
 #include "bg_version.h"
 
 #include "logging.h"
 #include "systick.h"
+#include "rac.h"
+#include "em_gpio.h"
 
 extern uint16 head, tail;
 extern uint16 headu[], tailu[], next_tailu[];
@@ -101,7 +103,13 @@ printf("sizeof(struct event): %d\n",sizeof_event());
 
 init_systick();
 init_logging();
+route_rac();
+#define SYNC_PORT gpioPortC
+#define SYNC_PIN (9u)
+#define SYNC(X) (X)?GPIO_PinOutSet(SYNC_PORT,SYNC_PIN):GPIO_PinOutClear(SYNC_PORT,SYNC_PIN)
+GPIO_PinModeSet(SYNC_PORT,SYNC_PIN,gpioModePushPull,0);
 
+#if(1)
 while(rx_fill() < 1);
 while(1) {
 	uint8 rc = rx_get(1,&cmd[0]);
@@ -120,6 +128,8 @@ while(1) {
 	}
 }
 printf("cmd: %s\n",cmd);
+#endif
+
 #ifdef NO
 GPIO_PinModeSet(BSP_BUTTON0_PORT,BSP_BUTTON0_PIN,gpioModeInputPullFilter,1);
 printf("waiting for connection ... ");
@@ -129,6 +139,7 @@ while(GPIO_PinInGet(BSP_BUTTON0_PORT,BSP_BUTTON0_PIN));
 printf("connected\n");
 
 	log_event_id(0xfe,__LINE__,BG_VERSION_MAJOR << 24 | BG_VERSION_MINOR << 16 | BG_VERSION_PATCH << 8);
+	SYNC(1);
 /* Initialize stack */
   gecko_init(pconfig);
 
@@ -148,14 +159,17 @@ printf("connected\n");
 
     /* Check for stack event. This is a blocking event listener. If you want non-blocking please see UG136. */
     log_event(0x30,__LINE__);
+    SYNC(0);
     evt = gecko_wait_event();
+    SYNC(1);
     log_event_id(0x40,__LINE__,BGLIB_MSG_ID(evt->header));
 #ifdef DUMP
     switch(BGLIB_MSG_ID(evt->header)) {
-    case gecko_evt_hardware_soft_timer_id:
-    case gecko_evt_gatt_server_user_write_request_id:
+    //case gecko_evt_hardware_soft_timer_id:
+    //case gecko_evt_gatt_server_user_write_request_id:
     	break;
     default:
+    	printf("timestamp:%08x:%08x",BGLIB_MSG_ID(evt->header),timestamp());
     	dump_event(evt);
     }
 #endif
@@ -166,7 +180,7 @@ printf("connected\n");
 	//printf("%d events in queue\n",log_fill());
 
 	uint32 current = SysTick->VAL;
-	uint32 target = (current - 20*38400) & 0xffffff;
+	uint32 target = (current - 1*38400) & 0xffffff;
 
 	/* Handle events */
     switch (BGLIB_MSG_ID(evt->header)) {
@@ -180,31 +194,45 @@ printf("connected\n");
     	  gecko_cmd_system_get_bt_address();
     	  printf("wwr: %04x\n",gattdb_wwr);
     	  printf("%d calls so far\n",log_fill());
-    	  //gecko_cmd_hardware_set_soft_timer(2<<15,0,0);
-    	  //scanning = 1;
-          gecko_cmd_le_gap_set_advertise_timing(0, 160, 160, 0, 0);
+    	  //gecko_cmd_hardware_set_soft_timer(5<<15,0,0);
+    	  scanning = 0;
+    	  log_event(0xf1,__LINE__);
+    	  //gecko_cmd_le_gap_set_discovery_timing(le_gap_phy_1m,1600,1600);
+    	  gecko_cmd_le_gap_set_advertise_timing(0, 160, 160, 0, 0);
+          log_event(0xf2,__LINE__);
+    	  //gecko_cmd_le_gap_start_discovery(le_gap_phy_1m,le_gap_discover_observation);
     	  gecko_cmd_le_gap_start_advertising(0, le_gap_general_discoverable, le_gap_connectable_scannable);
+    	  log_event(0xf3,__LINE__);
         break;
 
     case gecko_evt_hardware_soft_timer_id: /***************************************************************** hardware_soft_timer **/
 #define ED evt->data.evt_hardware_soft_timer
     	switch(scanning) {
-    	case 0: break;
+    	case 0:
+    		gecko_cmd_le_gap_end_procedure();
+    		scanning++;
+    		break;
     	case 1:
+    		log_event(0xf4,__LINE__);
+    		scanning++;
+    		break;
+    	case 2:
+    		while(log_fill()) logging_process();
+    		NVIC_SystemReset();
             gecko_cmd_le_gap_set_advertise_timing(0, 160, 160, 0, 0);
     		//gecko_cmd_le_gap_start_discovery(le_gap_phy_1m,le_gap_discover_observation);
     		scanning = 2;
     		break;
-    	case 2:
+    	case 3:
             gecko_cmd_le_gap_start_advertising(0, le_gap_general_discoverable, le_gap_connectable_scannable);
     		//gecko_cmd_le_gap_end_procedure();
     		scanning = 0;
     		break;
-    	case 3:
+    	case 4:
     		gecko_cmd_sm_set_bondable_mode(1);
     		scanning++;
     		break;
-    	case 4:
+    	case 5:
     		gecko_cmd_sm_configure(3,sm_io_capability_displayonly);
     		scanning = 1;
     	}
@@ -238,6 +266,7 @@ printf("connected\n");
 
       case gecko_evt_gatt_server_user_write_request_id:
 #define ED evt->data.evt_gatt_server_user_write_request
+    	  break;
     	  total += ED.value.len;
     	  histo[ED.value.len]++;
     	  {
@@ -255,7 +284,9 @@ printf("connected\n");
       default:
         break;
     }
+#if(0)
 	if(target > current) while(SysTick->VAL < current);
 	while(SysTick->VAL > target);
+#endif
   }
 }
