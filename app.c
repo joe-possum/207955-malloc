@@ -25,7 +25,7 @@
 #include "gatt_db.h"
 #include "uartdrv.h"
 #include "app.h"
-//#include "dump.h"
+#include "dump.h"
 #include "bg_version.h"
 
 #include "logging.h"
@@ -186,7 +186,7 @@ printf("connected\n");
 	//printf("%d events in queue\n",log_fill());
 
 	current = SysTick->VAL;
-	target = (current - 1*38400) & 0xffffff;
+	target = (current - 100*38400) & 0xffffff;
 
 	/* Handle events */
     switch (BGLIB_MSG_ID(evt->header)) {
@@ -244,7 +244,10 @@ printf("connected\n");
     	case 6:
     	    log_event(0xf4,__LINE__);
     	    show_stats();
+    	    scanning++;
     	    break;
+    	case 7:
+    		NVIC_SystemReset();
     	}
       break;
 #undef ED
@@ -269,7 +272,7 @@ printf("connected\n");
         break;
 
       case gecko_evt_le_connection_closed_id:
-    	  gecko_cmd_hardware_set_soft_timer(1<<13,0,1);
+    	  gecko_cmd_hardware_set_soft_timer(1<<13,0,0);
     	  scanning = 6;
         break;
 
@@ -277,6 +280,7 @@ printf("connected\n");
 
       case gecko_evt_gatt_server_user_write_request_id:
 #define ED evt->data.evt_gatt_server_user_write_request
+    	  printf("\npacket_index:%d\n",ED.value.data[0]);
     	  break;
     	  total += ED.value.len;
     	  histo[ED.value.len]++;
@@ -295,7 +299,7 @@ printf("connected\n");
       default:
         break;
     }
-#if(0)
+#if(1)
 	if(target > current) while(SysTick->VAL < current);
 	while(SysTick->VAL > target);
 #endif
